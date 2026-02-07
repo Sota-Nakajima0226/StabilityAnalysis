@@ -268,7 +268,6 @@ def main():
                     / f"{removed_nodes[0]}-{removed_nodes[1]}.json"
                 )
                 JSON_HANDLER.save_json(asdict(output_result), file_path)
-
         else:
             print(f"Invalid result: {m9.removed_nodes}")
             invalid_results.append((m9.removed_nodes, massless_solutions))

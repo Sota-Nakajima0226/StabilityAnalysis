@@ -54,7 +54,7 @@ def get_moduli_8d_components_list(
 
 
 def get_a8_and_b_from_delta(delta: Matrix, a9: Matrix) -> Tuple[Matrix, Rational]:
-    a8 = Matrix(delta[1:, :])
+    a8 = Matrix(delta[2:, :])
     b = S(delta[0]) - SMH.dot_product(a9, a8) / S(2)
     return a8, Rational(b)
 

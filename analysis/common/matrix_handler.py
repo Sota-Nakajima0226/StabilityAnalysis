@@ -1,5 +1,7 @@
-from typing import Any, List, Union, cast
+from enum import Enum, auto
 import numpy as np
+import sympy as sp
+from typing import Any, List, Union, cast, Tuple, Dict
 from scipy.linalg import eigh
 
 from sympy import Matrix, Rational, sympify
@@ -127,6 +129,15 @@ class NpMatrixHandler:
 NMH = NpMatrixHandler(precision=PRECISION)
 
 
+class CriticalPointType(Enum):
+    POSITIVE = auto()
+    SEMIPOSITIVE = auto()
+    NEGATIVE = auto()
+    SEMINEGATIVE = auto()
+    SADDLE_POINT = auto()
+    ZERO = auto()
+
+
 class SpMatrixHandler:
     """
     Class to handle matrices by sympy.
@@ -240,6 +251,64 @@ class SpMatrixHandler:
             if prepend
             else Matrix.vstack(vector, Matrix(values))
         )
+
+    @staticmethod
+    def create_zero_matrix(dimension: int) -> Matrix:
+        """
+        Create a matrix with all components being zero.
+        Args:
+          dimension (int): dimension of the matrix.
+        Returns:
+          Matrix: matrix with all components being zero.
+        """
+        return sp.zeros(dimension, dimension)
+
+    @staticmethod
+    def classify_critical_point(
+        hessian: Matrix, precision: int = 4
+    ) -> Tuple[Dict[float, int], CriticalPointType]:
+        """
+        Determine the type of the critical point by calculating eigenvalues of the hessian.
+
+        Args:
+            hessian (Matrix): Hessian at the critical point.
+            precision (int, default 4): precision.
+        Returns:
+            Dict[float, int]:
+                key: eigenvalues
+                value: multiplicity
+            CriticalPointType: type of the critical point.
+        """
+        # Calculate eigenvalues
+        raw_eigs = hessian.eigenvals()
+
+        eigs = {}
+        for val, mult in raw_eigs.items():
+            rounded_val = round(float(val.evalf()), precision)
+            if rounded_val == 0.0:  # Replace -0.0 to 0.0
+                rounded_val = 0.0
+            eigs[rounded_val] = eigs.get(rounded_val, 0) + mult
+
+        has_pos = any(v > 0 for v in eigs.keys())
+        has_neg = any(v < 0 for v in eigs.keys())
+        has_zero = any(v == 0 for v in eigs.keys())
+
+        if has_pos and has_neg:
+            return eigs, CriticalPointType.SADDLE_POINT
+
+        if has_pos:
+            if has_zero:
+                return eigs, CriticalPointType.SEMIPOSITIVE
+            else:
+                return eigs, CriticalPointType.POSITIVE
+
+        if has_neg:
+            if has_zero:
+                return eigs, CriticalPointType.SEMINEGATIVE
+            else:
+                return eigs, CriticalPointType.NEGATIVE
+
+        return eigs, CriticalPointType.ZERO
 
 
 SMH = SpMatrixHandler()
