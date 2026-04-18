@@ -377,7 +377,7 @@ def select_coset_8d(
 
 
 def select_coset_8d_with_solutions(
-    conditions: Optional[Dict[str, Any]] = None
+    conditions: Optional[Dict[str, Any]] = None,
 ) -> List[Moduli8d]:
     cur = conn.cursor()
     sql = """

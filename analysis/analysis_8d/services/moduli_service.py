@@ -1,38 +1,15 @@
 import sys
 import itertools
-import json
 from pathlib import Path
-from typing import List, Dict
-from dataclasses import asdict
+from typing import List, Dict, Tuple
 from sympy import Rational, Matrix
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-import common.file_path as fp
 from common.dynkin_handler import DH_E16
-from common.weight import get_fund_weights_sp_9d
 from model.lie_algebra import DynkinType, DynkinInfo, SemiSimpleLieAlg
 from model.moduli import Coefficient, Moduli8DComponent
 from common.matrix_handler import SMH
-from sqlite.db_utils import (
-    select_moduli_9d,
-    bulk_insert_moduli_8d,
-    delete_records,
-)
-from sqlite.entities import Moduli8d
-
-
-############
-# Settings
-############
-# removed nodes excluded from the calculation
-skip_nodes = [["8", "18"]]
-# if output the results to json files
-is_output_file = False
-# if the execution mode is debug
-debug = False
-# calculation targets in debug mode
-target_removed_nodes = [["0", "10"]]
 
 
 def find_coeffs_of_fund_weights_DE(
@@ -311,8 +288,18 @@ def set_coefficients_multiple_nodes_A(
 
 
 def get_coefficients_8d(removed_nodes: List[str]) -> List[List[Coefficient]]:
+    """_summary_
+
+    Args:
+        removed_nodes (List[str]): _description_
+
+    Returns:
+        List[List[Coefficient]]: _description_
+    """
     result = []
+    # Get the Dynkin diagram in 9D by removing the two node from the EDD
     diagram_9d = DH_E16.remove_nodes(DH_E16.diagram, removed_nodes)
+    # Get the information of each connected diagram of the Dynkin diagram
     cdd_info_list_9d = DH_E16.get_connected_diagrams(diagram_9d)
     for cdd_info in cdd_info_list_9d:
         # Get Kac labels for each node of the connected Dynkin diagram
@@ -371,53 +358,19 @@ def get_moduli_8d_components_list(
     return wl_list
 
 
-def main():
-    fp.WL_8D_DIR_PATH.mkdir(parents=True, exist_ok=True)
-    moduli_9d_list = select_moduli_9d()
-    for m9 in moduli_9d_list:
-        removed_nodes = list(m9.removed_nodes)
-        if removed_nodes in skip_nodes:
-            continue
-        if debug and removed_nodes not in target_removed_nodes:
-            continue
-        print(f"Getting the moduli in 8D for removed_nodes_9d={removed_nodes}...")
-        coefficients_list = get_coefficients_8d(removed_nodes)
-        fund_weights_9d = get_fund_weights_sp_9d(removed_nodes)
-        moduli_8d_components_list = get_moduli_8d_components_list(
-            coefficients_list, fund_weights_9d
-        )
-        moduli_8d_list = []
-        for moduli_tuple in list(itertools.product(*moduli_8d_components_list)):
-            delta = SMH.create_constant_vector(0, 18)
-            lie_alg = SemiSimpleLieAlg()
-            removed_nodes_8d = []
-            for moduli in moduli_tuple:
-                removed_nodes_8d.append(moduli.removed_nodes_8d)
-                delta += moduli.delta
-                if moduli.lie_algebra_8d.A:
-                    lie_alg.A.extend(moduli.lie_algebra_8d.A)
-                if moduli.lie_algebra_8d.D:
-                    lie_alg.D.extend(moduli.lie_algebra_8d.D)
-                if moduli.lie_algebra_8d.E:
-                    lie_alg.E.extend(moduli.lie_algebra_8d.E)
-            moduli_8d_list.append(
-                Moduli8d(
-                    id=0,
-                    removed_nodes=json.dumps(removed_nodes_8d),
-                    moduli_9d_id=m9.id,
-                    delta=json.dumps([str(e) for e in delta]),
-                    gauge_group=json.dumps(asdict(lie_alg)),
-                    maximal_enhanced=None,
-                    cosmological_constant=None,
-                    is_critical_point=None,
-                    hessian=None,
-                    type=None,
-                )
-            )
-        delete_records(table_name="moduli_8d", conditions={"moduli_9d_id": m9.id})
-        bulk_insert_moduli_8d(items=moduli_8d_list)
-    print("All calculations completed successfully")
-
-
-if __name__ == "__main__":
-    main()
+def get_moduli_8d_info_from_components(
+    moduli_tuple: tuple[Moduli8DComponent, ...],
+) -> Tuple[Matrix, SemiSimpleLieAlg, List[str]]:
+    delta = SMH.create_constant_vector(0, 18)
+    lie_alg = SemiSimpleLieAlg()
+    removed_nodes_8d = []
+    for moduli in moduli_tuple:
+        removed_nodes_8d.append(moduli.removed_nodes_8d)
+        delta += moduli.delta
+        if moduli.lie_algebra_8d.A:
+            lie_alg.A.extend(moduli.lie_algebra_8d.A)
+        if moduli.lie_algebra_8d.D:
+            lie_alg.D.extend(moduli.lie_algebra_8d.D)
+        if moduli.lie_algebra_8d.E:
+            lie_alg.E.extend(moduli.lie_algebra_8d.E)
+    return delta, lie_alg, removed_nodes_8d

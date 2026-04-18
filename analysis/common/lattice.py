@@ -1,7 +1,7 @@
-from typing import List, Any
+from typing import List
 
 import numpy as np
-from sympy import Matrix, Rational, S
+from sympy import Matrix, Rational
 from itertools import combinations, product
 from common.matrix_handler import SMH
 
@@ -11,7 +11,7 @@ def generate_e8_root_np_vectors() -> List[np.ndarray]:
     Generate 240 non-zero root vectors of E_8 by numpy.
 
     Returns:
-      List: a set of non-zero roots of E_8
+      List[np.ndarray]: a set of non-zero roots of E_8
     """
     root_vectors = []
     # Generate integer roots: (±1, ±1, 0, 0, 0, 0, 0, 0)
@@ -40,7 +40,7 @@ def generate_e8_root_sp_vectors() -> List[Matrix]:
     Generate 240 non-zero root vectors of E_8 by sympy.
 
     Returns:
-      List: a set of non-zero roots of E_8
+      List[Matrix]: a set of non-zero roots of E_8
     """
     root_vectors = []
     # Generate integer roots: (±1, ±1, 0, 0, 0, 0, 0, 0)
@@ -54,8 +54,7 @@ def generate_e8_root_sp_vectors() -> List[Matrix]:
     signs = [Rational(1, 2), Rational(-1, 2)]
     for bits in range(256):
         element = [
-            (bits >> i & 1) * S(signs[1]) + (~bits >> i & 1) * S(signs[0])
-            for i in range(8)
+            (bits >> i & 1) * signs[1] + (~bits >> i & 1) * signs[0] for i in range(8)
         ]
         if sum(element) % 2 == 0:
             root_vectors.append(Matrix(element))

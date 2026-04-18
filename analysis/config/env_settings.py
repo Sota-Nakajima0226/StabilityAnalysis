@@ -6,6 +6,7 @@ from pathlib import Path
 _DOTENV_LOADED = False
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
+
 def ensure_dotenv_loaded() -> None:
     global _DOTENV_LOADED
     if _DOTENV_LOADED:
@@ -19,7 +20,9 @@ def ensure_dotenv_loaded() -> None:
         raise ImportError("dotenv is not installed")
     _DOTENV_LOADED = True
 
+
 ensure_dotenv_loaded()
+
 
 class EnvSettings:
     def __init__(self) -> None:
@@ -48,14 +51,18 @@ class EnvSettings:
             "ANALYSIS_9D_TARGET_MODULI_9D_IDS", [3]
         )
 
-        self.analysis_8d_coset_chunk_size = self._int("ANALYSIS_8D_COSET_CHUNK_SIZE", 5000)
+        self.analysis_8d_coset_chunk_size = self._int(
+            "ANALYSIS_8D_COSET_CHUNK_SIZE", 5000
+        )
         self.analysis_8d_cosmological_const_chunk_size = self._int(
             "ANALYSIS_8D_COSMOLOGICAL_CONST_CHUNK_SIZE", 5000
         )
         self.analysis_8d_critical_point_chunk_size = self._int(
             "ANALYSIS_8D_CRITICAL_POINT_CHUNK_SIZE", 5000
         )
-        self.analysis_8d_hessian_chunk_size = self._int("ANALYSIS_8D_HESSIAN_CHUNK_SIZE", 5000)
+        self.analysis_8d_hessian_chunk_size = self._int(
+            "ANALYSIS_8D_HESSIAN_CHUNK_SIZE", 5000
+        )
         self.analysis_8d_hessian_eigenvalue_round_digits = self._int(
             "ANALYSIS_8D_HESSIAN_EIGENVALUE_ROUND_DIGITS", 8
         )
@@ -71,12 +78,10 @@ class EnvSettings:
             return p if p.is_absolute() else _REPO_ROOT / p
         return _REPO_ROOT / "config" / "config.yml"
 
-
     def _truthy(self, raw: str | None, default: bool) -> bool:
         if raw is None or not raw.strip():
             return default
         return raw.strip().lower() in ("1", "true", "yes", "on")
-
 
     def _int(self, name: str, default: int) -> int:
         raw = os.getenv(name)
@@ -91,5 +96,6 @@ class EnvSettings:
         if raw == "":
             return []
         return [int(x.strip(), 10) for x in raw.split(",") if x.strip()]
+
 
 ENV = EnvSettings()

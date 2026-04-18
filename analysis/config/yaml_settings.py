@@ -8,6 +8,7 @@ from config.env_settings import ENV
 
 _CONFIG_CACHE: dict[str, Any] | None = None
 
+
 def get_config() -> dict[str, Any]:
     def _load_yaml_file(path: Path) -> dict[str, Any]:
         if not path.is_file():
@@ -20,6 +21,7 @@ def get_config() -> dict[str, Any]:
         if isinstance(data, dict):
             return data
         return {}
+
     global _CONFIG_CACHE
     if _CONFIG_CACHE is None:
         _CONFIG_CACHE = _load_yaml_file(ENV.app_config_yml_path)
