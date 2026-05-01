@@ -52,7 +52,7 @@ def get_hessian_components(massless_solutions_9d: Cursor, a9: Matrix, a8: Matrix
     )
 
 
-def calculate_diagonalized_hessian(moduli: JoinedModuli8d) -> Matrix:
+def calculate_hessian(moduli: JoinedModuli8d) -> Matrix:
     base_sql = f"""
         SELECT 
             ms9.element

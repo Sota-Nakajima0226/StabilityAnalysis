@@ -38,6 +38,8 @@ Create tables:
 python analysis/sqlite/create_table.py
 ```
 
+`create_table.py` also creates an index on `coset_8d (moduli_8d_id, character)` to speed up the cosmological-constant aggregation.
+
 Insert master data:
 
 ```bash
@@ -70,19 +72,25 @@ python analysis/sqlite/insert_master_data.py
    python analysis/analysis_8d/jobs/run_moduli.py
    ```
 
-2. **Cosmological constant** — compute for each modulus; results go into the `cosmological_constant` column of `moduli_8d`:
+2. **Coset (8D)** — classify the massless solutions by the inner products with the moduli and insert into `coset_8d`:
+
+   ```bash
+   python analysis/analysis_8d/jobs/run_coset.py
+   ```
+
+3. **Cosmological constant** — compute for each modulus; results go into the `cosmological_constant` column of `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/jobs/run_cosmological_constant.py
    ```
 
-3. **Critical points** — first derivative of the potential; results go into `is_critical_point` on `moduli_8d`:
+4. **Critical points** — first derivative of the potential; results go into `is_critical_point` on `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/jobs/run_critical_point.py
    ```
 
-4. **Hessian** — second derivative at each critical point; results go into `hessian` and `type` on `moduli_8d`:
+5. **Hessian** — second derivative at each critical point; results go into `hessian` and `type` on `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/jobs/run_hessian.py

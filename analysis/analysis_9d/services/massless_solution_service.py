@@ -3,7 +3,6 @@ import itertools
 import json
 from pathlib import Path
 from typing import Any, List, cast
-from dataclasses import asdict
 from sympy import Matrix, Rational, sqrt, floor, ceiling
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
