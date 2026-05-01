@@ -1,11 +1,16 @@
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 import sys
 from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent))
 
-from model.lie_algebra import SimpleLieAlg, SemiSimpleLieAlg, DynkinType, DynkinInfo
-from common.constants import EDD_JSON
+from config.yaml_settings import YAML
+from model.lie_algebra import SemiSimpleLieAlg, DynkinType, DynkinInfo
+from common.json_handler import JSON_HANDLER
+
+
+EDD_PATH = YAML.paths.input_dir / "edd.json"
+EDD_JSON = JSON_HANDLER.load_json(EDD_PATH)
 
 
 def get_edd_connections() -> Dict[str, List[str]]:
@@ -20,10 +25,16 @@ EDD_E16 = get_edd_connections()
 
 class DynkinHandler:
     """
-    Class to handle Dynkin diagram.
+    Class to handle Dynkin diagrams.
     """
 
     def __init__(self, diagram: Dict[str, List[str]]) -> None:
+        """
+        Constructor.
+
+        Args:
+            diagram (Dict[str, List[str]]): Dynkin diagram.
+        """
         self.diagram = diagram
 
     def identify_ade_type(
@@ -33,17 +44,16 @@ class DynkinHandler:
         intersections: List[str],
         cdd: Dict[str, List[str]],
     ) -> Optional[DynkinType]:
-        """
-        Identify the type of the Lie algebra as A or D or E.
+        """Identify the type of the Lie algebra as A or D or E.
 
         Args:
             endpoints (List[str]): nodes of endpoint.
             segments (List[str]): nodes of segment.
             intersections (List[str]): nodes of intersection.
-            cdd (dict): a connected Dynkin diagram.
+            cdd (Dict[str, List[str]]): connected Dynkin diagram.
 
         Returns:
-            DynkinType: the type of the Lie algebra("A" or "D" or "E").
+            Optional[DynkinType]: _description_
         """
         if len(endpoints) == 2 and len(intersections) == 0:
             return DynkinType.A
@@ -354,6 +364,7 @@ class DynkinHandler:
             )
         elif dynkin_type == DynkinType.D:
             intersection = dynkin_info.intersections[0]
+            node_connected_to_extra_node = None
             if dynkin_info.rank == 4:
                 node_connected_to_extra_node = intersection
             else:
@@ -363,6 +374,10 @@ class DynkinHandler:
                         continue
                     node_connected_to_extra_node = node_connected_to_ep
                     break
+            if node_connected_to_extra_node is None:
+                raise ValueError(
+                    "Failed to determine node connected to extra node for Dynkin D."
+                )
             diagram[extra_node] = [node_connected_to_extra_node]
             diagram[node_connected_to_extra_node].append(extra_node)
             endpoints = dynkin_info.endpoints + [extra_node]

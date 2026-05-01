@@ -68,10 +68,15 @@ CREATE TABLE IF NOT EXISTS coset_8d (
         ON UPDATE CASCADE
 );
 """
+sql_create_index_coset_8d_moduli_character = """
+CREATE INDEX IF NOT EXISTS idx_coset_8d_moduli_8d_id_character
+ON coset_8d (moduli_8d_id, character);
+"""
 
 # Create Tables
 cur.execute(sql_create_moduli_9d)
 cur.execute(sql_create_moduli_8d)
 cur.execute(sql_create_massless_solution_9d)
 cur.execute(sql_create_coset_8d)
+cur.execute(sql_create_index_coset_8d_moduli_character)
 conn.commit()

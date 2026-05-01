@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict
 from sympy import Rational, Matrix
 
 import sys
@@ -7,96 +7,14 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
+from config.yaml_settings import YAML
 from common.json_handler import JsonHandler
-from common.matrix_handler import SMH, NMH
-from common.file_path import EDD_PATH, INPUT_DIR_PATH
+from common.matrix_handler import SMH
+from common.dynkin_handler import EDD_JSON
+from model.weight import FundWeightSp
 
 jh: JsonHandler = JsonHandler()
-FUND_WEIGHTS_PATH: Path = INPUT_DIR_PATH / "fund_weights.json"
-# coefficients in the linear combinations of the fundamental weights that give the candidates of the Wilson lines in 9D
-COEFFICIENTS_JSON_PATH: Path = INPUT_DIR_PATH / "9d" / "coefficients.json"
-COEFFICIENTS_DICT: List[dict] = jh.load_json(COEFFICIENTS_JSON_PATH)
-
-FUND_WEIGHTS_DICT = jh.load_json(FUND_WEIGHTS_PATH)
-
-EDD_DICT = jh.load_json(EDD_PATH)
-
-
-def get_fund_weights_np() -> Dict[str, dict]:
-    """
-    Get fundamental weights of E8 x E8.
-
-    Returns:
-      dict: fundamental weights of E8 x E8:
-        {
-            "node label": {
-                "vector": fundamental weight vector (np.ndarray),
-                "k": Kac label (int)
-            }, ...
-        }
-    """
-    fund_weight_vectors = {}
-    zero_vector = NMH.create_constant_vector(0.0)
-    for label, fw in FUND_WEIGHTS_DICT.items():
-        if int(label) < 10:
-            fw_vector = NMH.concat_vectors(
-                [NMH.create_vector(fw["components"]), zero_vector]
-            )
-        else:
-            fw_vector = NMH.concat_vectors(
-                [zero_vector, NMH.create_vector(fw["components"])]
-            )
-        if fw["den"] != 1:
-            fw_vector = NMH.scalar_multiplication(
-                vector=fw_vector, number=fw["den"], inverse=True
-            )
-        fund_weight_vectors[label] = {"vector": fw_vector, "k": fw["k"]}
-    return fund_weight_vectors
-
-
-FUND_WEIGHTS_NP = get_fund_weights_np()
-
-
-def get_fund_weights_np_after_removing_nodes(removed_node_labels: List[str]) -> dict:
-    """
-    Get fundamental weights of a Dynkin diagram obtained from the EDD by removing two nodes.
-
-    Args:
-        removed_node_labels (List[str]): labels of removed nodes.
-
-    Returns:
-        dict: fundamental weights of the Dynkin diagram.
-    """
-    fw_dict = dict()
-    for i in range(19):
-        if i == 9:
-            continue
-        node_label = str(i)
-        removed_node_label = removed_node_labels[0] if i < 9 else removed_node_labels[1]
-        if node_label == removed_node_label:
-            continue
-        fund_weight = FUND_WEIGHTS_NP[node_label]
-        removed_fund_weight = FUND_WEIGHTS_NP[removed_node_label]
-        # first_term = removed_fund_weight["k"] * fund_weight["vector"]
-        first_term = NMH.scalar_multiplication(
-            vector=fund_weight["vector"], number=removed_fund_weight["k"]
-        )
-        # second_term = - fund_weight["k"] * NMH.create_vector(removed_fund_weight["vector"])
-        second_term = NMH.scalar_multiplication(
-            vector=NMH.create_vector(removed_fund_weight["vector"]),
-            number=fund_weight["k"],
-        )
-        fw_vector = NMH.scalar_multiplication(
-            vector=(first_term - second_term),
-            number=removed_fund_weight["k"],
-            inverse=True,
-        )
-        fw_dict[str(i)] = fw_vector
-    fw_dict["-1"] = NMH.create_constant_vector(0.0, dimension=16).tolist()
-    return fw_dict
-
-
-from model.weight import FundWeightSp
+FUND_WEIGHTS_PATH: Path = YAML.paths.input_dir / "fund_weights.json"
 
 
 def get_fund_weights_sp_10d() -> Dict[str, FundWeightSp]:
@@ -110,7 +28,8 @@ def get_fund_weights_sp_10d() -> Dict[str, FundWeightSp]:
     """
     fund_weights = {}
     zero_vector = SMH.create_constant_vector(0)
-    for node, fw in FUND_WEIGHTS_DICT.items():
+    fund_weights_dict = jh.load_json(FUND_WEIGHTS_PATH)
+    for node, fw in fund_weights_dict.items():
         if int(node) < 10:
             fw_vector = SMH.concat_vectors(
                 [SMH.create_vector(fw["components"], fw["den"]), zero_vector]
@@ -155,9 +74,6 @@ def get_fund_weights_sp_9d(removed_nodes: List[str]) -> Dict[str, Matrix]:
         fw_dict[str(i)] = SMH.extend_vector(vector_16d, [0, 0])
     fw_dict["-1"] = SMH.create_constant_vector(0, dimension=18)
     return fw_dict
-
-
-from common.constants import EDD_JSON
 
 
 def get_roots_sp_9d(removed_nodes: List[str]) -> Dict[str, Matrix]:

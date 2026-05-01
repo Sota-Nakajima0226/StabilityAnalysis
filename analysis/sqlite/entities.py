@@ -43,3 +43,11 @@ class Coset8d:
     moduli_8d_id: int
     massless_solution_9d_id: int
     character: int
+
+
+@dataclass
+class JoinedModuli8d:
+    id: int
+    a9: Any
+    g9: str
+    delta: Any

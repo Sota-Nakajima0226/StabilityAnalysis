@@ -1,7 +1,5 @@
 import sqlite3
 
-# DB Connection
-conn = sqlite3.connect("nonsusy_strings.db")
-conn.execute("PRAGMA foreign_keys = ON;")
+from config.env_settings import ENV
 
-cur = conn.cursor()
+conn = sqlite3.connect(ENV.database_path)

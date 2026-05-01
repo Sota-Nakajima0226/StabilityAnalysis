@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="ofGQZuKuFvhFuR6NWNz6" name="EDD">
-        <mxGraphModel dx="1019" dy="537" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="410" dy="581" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -169,14 +169,11 @@
                 <mxCell id="58" value="2" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontColor=#FF0000;fontSize=18;" parent="1" vertex="1">
                     <mxGeometry x="1160" y="80" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="69" value="&lt;u&gt;Strategy&lt;/u&gt;&lt;br&gt;&lt;ol&gt;&lt;li&gt;Create a Dynkin diagram by removing two nodes from the EDD&lt;/li&gt;&lt;li&gt;Identify gauge groups from the Dynkin diagram&lt;/li&gt;&lt;li&gt;Figure out Kac label for each node of the Dynkin diagram&lt;/li&gt;&lt;li&gt;Find fundamental weights of the gauge groups expressed as linear combinations of those of&amp;nbsp; E8 x E8&lt;/li&gt;&lt;li&gt;By using the shift algorith, find the candidates of the Wilson lines that can potentially cause the suppression of the cosmological constant&lt;/li&gt;&lt;/ol&gt;" style="text;html=1;align=left;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-                    <mxGeometry x="80" y="360" width="790" height="150" as="geometry"/>
-                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="75Xfjebs-4s_w6MKqOqp" name="Kac_labels">
-        <mxGraphModel dx="1019" dy="537" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="410" dy="581" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>

@@ -1,130 +1,17 @@
-from typing import Any, List, Union, cast
+import sympy as sp
 import numpy as np
-from scipy.linalg import eigh
-
+from enum import Enum, auto
+from typing import Any, List, Union, Tuple, Dict, cast
 from sympy import Matrix, Rational, sympify
-from common.constants import PRECISION
-from common.calculator import CALCULATOR
 
 
-class NpMatrixHandler:
-    """
-    Class to handle matrices by numpy.
-    """
-
-    def __init__(self, precision: int = 10):
-        self.precision = precision
-
-    def create_vector(
-        self, components: List[Union[int, float]], round: bool = True
-    ) -> np.ndarray:
-        """
-        Create a vector from a list of numbers.
-        Args:
-          components (List[int] or List[float]): components of a vector.
-          den (int): overall denominator.
-        Returns:
-          Matrix: vector with rational elements.
-        """
-        if round:
-            return np.round(np.array(components, dtype=np.float64), self.precision)
-        else:
-            return np.array(components, dtype=np.float64)
-
-    def create_constant_vector(
-        self, value: Union[int, float], dimension: int = 8
-    ) -> np.ndarray:
-        """
-        Create a constant vector whose components are the same value.
-
-        """
-        return np.full(dimension, value, dtype=np.float64)
-
-    def scalar_multiplication(
-        self,
-        vector: np.ndarray,
-        number: Union[int, float],
-        inverse: bool = False,
-        round: bool = True,
-    ) -> np.ndarray:
-        if inverse:
-            v = vector / number
-        else:
-            v = vector * number
-        return np.round(v, self.precision) if round else v
-
-    def concat_vectors(self, vectors: List[np.ndarray]) -> np.ndarray:
-        """
-        Concatenate multiple vectors.
-        Args:
-          vectors (List[Matrix]): list of vectors.
-        Returns:
-          Matrix: concatenated vector.
-        """
-        return np.concatenate(vectors, dtype=np.float64)
-
-    def linear_combination(
-        self,
-        vectors: List[np.ndarray],
-        coefficients: List[Union[int, float]],
-        round: bool = True,
-    ) -> np.ndarray:
-        """
-        Calculate a liner combination.
-        Args:
-            coeffs (List[float] or List[int]): a list of coefficients.
-            vectors (List[np.array]): a list of vectors.
-        Returns:
-            np.array: the liner combined vector.
-        """
-        if len(vectors) != len(coefficients):
-            raise ValueError("The number of vectors and coefficients must be the same.")
-        result = sum(c * v for c, v in zip(coefficients, vectors))
-        if round:
-            return np.round(result, self.precision)
-        else:
-            return cast(np.ndarray, result)
-
-    def dot_product(self, v1: np.ndarray, v2: np.ndarray, round: bool = True) -> float:
-        """
-        Calculate the inner product of two vectors.
-        Args:
-            v1 (np.ndarray): vector1.
-            v2 (np.ndarray): vector2.
-        Returns:
-            float: inner product of v1 and v2.
-        """
-        if round:
-            return CALCULATOR.round(np.dot(v1, v2))
-        else:
-            return np.dot(v1, v2)
-
-    def get_eigenvalues(self, matrix: np.ndarray, round: bool = True) -> Any:
-        """
-        Solve a standard or generalized eigenvalue problem for a complex Hermitian or real symmetric matrix.
-
-        Args:
-          matrix (np.ndarray): A complex Hermitian or real symmetric matrix whose eigenvalues and eigenvectors will be computed.
-        Returns:
-          ndarray: The eigenvalues of matrix.
-        """
-        eigen_values = eigh(matrix, eigvals_only=True)
-        return np.round(eigen_values, self.precision) if round else eigen_values
-
-    def classify_critical_points(self, eigenvalues: np.ndarray) -> str:
-        if np.all(eigenvalues > 0):
-            return "minimum"
-        elif np.all(eigenvalues < 0):
-            return "maximum"
-        elif np.any(eigenvalues > 0) and np.any(eigenvalues < 0):
-            return "saddle_point"
-        elif np.any(eigenvalues >= 0) or np.any(eigenvalues <= 0):
-            return "undeterminable"
-        else:
-            return "saddle_point"
-
-
-NMH = NpMatrixHandler(precision=PRECISION)
+class CriticalPointType(Enum):
+    POSITIVE = "POSITIVE"
+    SEMIPOSITIVE = "SEMIPOSITIVE"
+    NEGATIVE = "NEGATIVE"
+    SEMINEGATIVE = "SEMINEGATIVE"
+    SADDLE_POINT = "SADDLE_POINT"
+    ZERO = "ZERO"
 
 
 class SpMatrixHandler:
@@ -240,6 +127,107 @@ class SpMatrixHandler:
             if prepend
             else Matrix.vstack(vector, Matrix(values))
         )
+
+    @staticmethod
+    def create_zero_matrix(dimension: int) -> Matrix:
+        """
+        Create a matrix with all components being zero.
+        Args:
+          dimension (int): dimension of the matrix.
+        Returns:
+          Matrix: matrix with all components being zero.
+        """
+        return sp.zeros(dimension, dimension)
+
+    @staticmethod
+    def classify_critical_point(
+        hessian: Matrix, precision: int = 4
+    ) -> Tuple[Dict[float, int], CriticalPointType]:
+        """
+        Determine the type of the critical point by calculating eigenvalues of the hessian.
+
+        Args:
+            hessian (Matrix): Hessian at the critical point.
+            precision (int, default 4): precision.
+        Returns:
+            Dict[float, int]:
+                key: eigenvalues
+                value: multiplicity
+            CriticalPointType: type of the critical point.
+        """
+        # Calculate eigenvalues
+        raw_eigs = cast(Dict[Any, int], hessian.eigenvals())
+
+        eigs = {}
+        for val, mult in raw_eigs.items():
+            rounded_val = round(float(val.evalf()), precision)
+            if rounded_val == 0.0:  # Replace -0.0 to 0.0
+                rounded_val = 0.0
+            eigs[rounded_val] = eigs.get(rounded_val, 0) + mult
+
+        has_pos = any(v > 0 for v in eigs.keys())
+        has_neg = any(v < 0 for v in eigs.keys())
+        has_zero = any(v == 0 for v in eigs.keys())
+
+        if has_pos and has_neg:
+            return eigs, CriticalPointType.SADDLE_POINT
+
+        if has_pos:
+            if has_zero:
+                return eigs, CriticalPointType.SEMIPOSITIVE
+            else:
+                return eigs, CriticalPointType.POSITIVE
+
+        if has_neg:
+            if has_zero:
+                return eigs, CriticalPointType.SEMINEGATIVE
+            else:
+                return eigs, CriticalPointType.NEGATIVE
+
+        return eigs, CriticalPointType.ZERO
+
+    @staticmethod
+    def classify_critical_point_numerical(
+        hessian: Matrix, epsilon: float = 1e-10
+    ) -> Tuple[np.ndarray, CriticalPointType]:
+        """
+        Determine the type of the critical point by calculating eigenvalues of the hessian.
+
+        Args:
+            hessian (Matrix): Hessian at the critical point.
+            epsilon (int, default 1e-10): threshold to be considered as 0.
+        Returns:
+            Dict[float, int]:
+                key: eigenvalues
+                value: multiplicity
+            CriticalPointType: type of the critical point.
+        """
+        # Convert a sympy matrix to a numpy matrix
+        h_np = np.array(hessian.tolist(), dtype=float)
+
+        # Calculate eigenvalues
+        eigs = np.linalg.eigvalsh(h_np)
+
+        has_pos = np.any(eigs > epsilon)
+        has_neg = np.any(eigs < -epsilon)
+        has_zero = np.any(np.abs(eigs) <= epsilon)
+
+        if has_pos and has_neg:
+            return eigs, CriticalPointType.SADDLE_POINT
+
+        if has_pos:
+            if has_zero:
+                return eigs, CriticalPointType.SEMIPOSITIVE
+            else:
+                return eigs, CriticalPointType.POSITIVE
+
+        if has_neg:
+            if has_zero:
+                return eigs, CriticalPointType.SEMINEGATIVE
+            else:
+                return eigs, CriticalPointType.NEGATIVE
+
+        return eigs, CriticalPointType.ZERO
 
 
 SMH = SpMatrixHandler()

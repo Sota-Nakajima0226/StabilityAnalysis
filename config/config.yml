@@ -1,0 +1,30 @@
+paths:
+  input_dir: input
+  output_8d_dir: output/8d
+  output_9d_dir: output/9d
+
+logging:
+  # Relative paths are resolved from repository root.
+  directory: logs
+  format: "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+  datefmt: "%Y-%m-%d %H:%M:%S"
+  # optional global fallback file if per-script file path is not set
+  file_path: logs/stability_analysis.log
+
+analysis_8d:
+  moduli:
+    log_file_path: moduli_8d.log
+  massless_solution:
+    log_file_path: massless_solution_8d.log
+  coset:
+    log_file_path: coset_8d.log
+  cosmological_const:
+    log_file_path: cosmological_const_8d.log
+  critical_point:
+    log_file_path: critical_point_8d.log
+  hessian:
+    log_file_path: hessian_8d.log
+
+analysis_9d:
+  massless_solution:
+    log_file_path: massless_solution_9d.log
