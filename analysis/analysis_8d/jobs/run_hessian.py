@@ -91,9 +91,7 @@ def main() -> None:
         if not debug:
             target_m8_ids = [m.id for m in moduli_list]
         else:
-            target_m8_ids = [
-                m.id for m in moduli_list if m.id in target_moduli_8d_ids
-            ]
+            target_m8_ids = [m.id for m in moduli_list if m.id in target_moduli_8d_ids]
         if not target_m8_ids:
             continue
 

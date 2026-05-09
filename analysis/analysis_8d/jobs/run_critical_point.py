@@ -66,9 +66,7 @@ def main() -> None:
             target_m8_ids = moduli_8d_ids
         else:
             target_m8_ids = [
-                m8_id
-                for m8_id in moduli_8d_ids
-                if m8_id in target_moduli_8d_ids
+                m8_id for m8_id in moduli_8d_ids if m8_id in target_moduli_8d_ids
             ]
         if not target_m8_ids:
             continue
@@ -82,9 +80,7 @@ def main() -> None:
 
         result_data: list[dict[str, Any]] = []
         with ProcessPoolExecutor(max_workers=workers) as ex:
-            for result in ex.map(
-                _compute_critical_point_one, target_m8_ids
-            ):
+            for result in ex.map(_compute_critical_point_one, target_m8_ids):
                 if not result.get("ok"):
                     failed_id = int(result.get("moduli_8d_id", -1))
                     failed_moduli_8d_ids.append(failed_id)
