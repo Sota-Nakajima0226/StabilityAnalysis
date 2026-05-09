@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Dict, Any, Tuple
+from typing import List, Optional, Dict, Any
 import sys
 import json
 
@@ -7,17 +7,52 @@ import json
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from sqlite.db_connection import conn
 from sqlite.entities import (
+    E16,
+    E16Coset9d,
     Moduli9d,
     Moduli8d,
     MasslessSolution9d,
     Coset8d,
     JoinedModuli8d,
+    JoinedE16Coset9d,
 )
 
 
 ##########
 # INSERT
 ##########
+def bulk_insert_e16(items: List[E16]):
+    """
+    Bulk insert E16 records.
+    """
+    sql = """
+    INSERT INTO e16 (
+        element
+    )
+    VALUES (?);
+    """
+    values = [(item.element,) for item in items]
+    with conn:
+        conn.executemany(sql, values)
+
+
+def bulk_insert_e16_coset_9d(items: List[E16Coset9d]):
+    """
+    Bulk insert E16 coset 9d records.
+    """
+    sql = """
+    INSERT INTO e16_coset_9d (
+        moduli_9d_id,
+        e16_id,
+        character
+    )
+    VALUES (?, ?, ?);
+    """
+    values = [(item.moduli_9d_id, item.e16_id, item.character) for item in items]
+    with conn:
+        conn.executemany(sql, values)
+
+
 def bulk_insert_moduli_9d(items: List[Moduli9d]):
     sql = """
     INSERT INTO moduli_9d (
@@ -25,7 +60,7 @@ def bulk_insert_moduli_9d(items: List[Moduli9d]):
         a9,
         g9,
         gauge_group,
-        maximal_enhanced,
+        use_analysis_9d,
         cosmological_constant,
         is_critical_point,
         hessian,
@@ -39,7 +74,7 @@ def bulk_insert_moduli_9d(items: List[Moduli9d]):
             item.a9,
             item.g9,
             item.gauge_group,
-            item.maximal_enhanced,
+            item.use_analysis_9d,
             item.cosmological_constant,
             item.is_critical_point,
             item.hessian,
@@ -121,7 +156,65 @@ def bulk_insert_coset_8d(items: List[Coset8d]):
 ##########
 # SELECT
 ##########
-def select_moduli_9d(conditions: Optional[Dict[str, Any]] = None) -> List[Moduli9d]:
+def select_e16() -> List[E16]:
+    cur = conn.cursor()
+    sql = """
+    SELECT 
+        id,
+        element
+    FROM e16
+    """
+    params = []
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+    results = []
+    for row in rows:
+        entity = E16(id=row[0], element=json.loads(row[1]))
+        results.append(entity)
+    return results
+
+
+def select_joined_e16_coset_9d(
+    conditions: Optional[Dict[str, Any]] = None,
+) -> List[JoinedE16Coset9d]:
+    cur = conn.cursor()
+    sql = """
+    SELECT 
+        id,
+        moduli_9d_id,
+        e16_id,
+        e16.element,
+        character
+    FROM e16_coset_9d
+    JOIN e16 ON e16_coset_9d.e16_id = e16.id
+    """
+    params = []
+    if conditions:
+        where_clauses = []
+        for col, value in conditions.items():
+            where_clauses.append(f"{col} = ?")
+            params.append(value)
+        where_sql = " WHERE " + " AND ".join(where_clauses)
+        sql += where_sql
+
+    cur.execute(sql, params)
+    rows = cur.fetchall()
+    results = []
+    for row in rows:
+        entity = JoinedE16Coset9d(
+            id=row[0],
+            moduli_9d_id=row[1],
+            e16_id=row[2],
+            element=json.loads(row[3]),
+            character=row[4],
+        )
+        results.append(entity)
+    return results
+
+
+def select_moduli_9d(
+    conditions: Optional[Dict[str, Any]] = None, filtered_use_analysis_9d: bool = False
+) -> List[Moduli9d]:
     cur = conn.cursor()
     sql = """
     SELECT 
@@ -130,7 +223,7 @@ def select_moduli_9d(conditions: Optional[Dict[str, Any]] = None) -> List[Moduli
         a9,
         g9,
         gauge_group,
-        maximal_enhanced,
+        use_analysis_9d,
         cosmological_constant,
         is_critical_point,
         hessian,
@@ -139,6 +232,10 @@ def select_moduli_9d(conditions: Optional[Dict[str, Any]] = None) -> List[Moduli
     """
 
     params = []
+    if filtered_use_analysis_9d is True:
+        sql += " WHERE use_analysis_9d = 1"
+    elif filtered_use_analysis_9d is False:
+        sql += " WHERE use_analysis_9d = 0"
     if conditions:
         where_clauses = []
         for col, value in conditions.items():
@@ -158,7 +255,7 @@ def select_moduli_9d(conditions: Optional[Dict[str, Any]] = None) -> List[Moduli
             a9=json.loads(row[2]),
             g9=row[3],
             gauge_group=json.loads(row[4]),
-            maximal_enhanced=row[5],
+            use_analysis_9d=row[5],
             cosmological_constant=row[6],
             is_critical_point=row[7],
             hessian=json.loads(row[8]) if row[8] else None,
@@ -360,42 +457,6 @@ def select_coset_8d(
         if offset:
             sql += " OFFSET ?"
             params.append(offset)
-
-    cur.execute(sql, params)
-    rows = cur.fetchall()
-
-    results = []
-    for row in rows:
-        entity = Coset8d(
-            id=row[0],
-            moduli_8d_id=row[1],
-            massless_solution_9d_id=row[2],
-            character=row[3],
-        )
-        results.append(entity)
-    return results
-
-
-def select_coset_8d_with_solutions(
-    conditions: Optional[Dict[str, Any]] = None,
-) -> List[Moduli8d]:
-    cur = conn.cursor()
-    sql = """
-    SELECT 
-        ms9.element
-    FROM coset_8d AS c8
-    JOIN massless_solution_9d AS ms9
-    ON ms9.id = c8.massless_solution_9d_id
-    """
-
-    params = []
-    if conditions:
-        where_clauses = []
-        for col, value in conditions.items():
-            where_clauses.append(f"{col} = ?")
-            params.append(value)
-        where_sql = " WHERE " + " AND ".join(where_clauses)
-        sql += where_sql
 
     cur.execute(sql, params)
     rows = cur.fetchall()

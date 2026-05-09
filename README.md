@@ -32,6 +32,30 @@ Configured in YAML:
 
 ## Preparation
 
+Before running the preparation script:
+
+1. Create and edit `.env`:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Set `DATABASE_PATH` in `.env` to your SQLite DB path.
+
+2. Create the DB file (example):
+
+   ```bash
+   sqlite3 ./db/stability_analysis.db ".databases"
+   ```
+
+Run all preparation steps at once:
+
+```bash
+./script/setup_preparation.sh
+```
+
+Or run each step manually.
+
 Create tables:
 
 ```bash
@@ -52,17 +76,22 @@ python analysis/sqlite/insert_master_data.py
 
 ### 9D analysis
 
-1. Solve the massless conditions in the 9D supersymmetric model and insert results into `massless_solution_9d`:
+1. **Cosmological constant** — compute for each modulus; results go into the `cosmological_constant` column of `moduli_9d`:
 
    ```bash
-   python analysis/analysis_9d/jobs/run_massless_solution.py
+   python analysis/analysis_9d/jobs/run_cosmological_constant.py
    ```
+
 
 ### 8D analysis
 
 **Prerequisites**
 
-- `moduli_9d` rows must already exist in the database.
+- Solve the massless conditions in the 9D supersymmetric model and insert results into `massless_solution_9d`:
+
+   ```bash
+   python analysis/analysis_9d/jobs/run_massless_solution.py
+   ```
 
 **Steps**
 

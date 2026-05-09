@@ -3,17 +3,31 @@ from typing import Optional, Any
 
 
 @dataclass
+class E16:
+    id: int
+    element: Any
+
+
+@dataclass
 class Moduli9d:
     id: int
     removed_nodes: Any
     a9: Any
     g9: str
     gauge_group: Any
-    maximal_enhanced: Optional[int]
+    use_analysis_9d: Optional[int]
     cosmological_constant: Optional[int]
     is_critical_point: Optional[int]
     hessian: Any
     type: Optional[str]
+
+
+@dataclass
+class E16Coset9d:
+    id: int
+    moduli_9d_id: int
+    e16_id: int
+    character: int
 
 
 @dataclass
@@ -51,3 +65,12 @@ class JoinedModuli8d:
     a9: Any
     g9: str
     delta: Any
+
+
+@dataclass
+class JoinedE16Coset9d:
+    id: int
+    moduli_9d_id: int
+    e16_id: int
+    element: Any
+    character: int

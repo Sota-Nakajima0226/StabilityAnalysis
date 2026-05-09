@@ -28,3 +28,5 @@ analysis_8d:
 analysis_9d:
   massless_solution:
     log_file_path: massless_solution_9d.log
+  cosmological_const:
+    log_file_path: cosmological_const_9d.log
