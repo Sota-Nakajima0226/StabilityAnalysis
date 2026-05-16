@@ -50,6 +50,9 @@ class EnvSettings:
         self.analysis_9d_target_moduli_9d_ids = self._int_list(
             "ANALYSIS_9D_TARGET_MODULI_9D_IDS", [3]
         )
+        self.analysis_9d_hessian_eigenvalue_round_digits = self._int(
+            "ANALYSIS_9D_HESSIAN_EIGENVALUE_ROUND_DIGITS", 8
+        )
 
         self.analysis_8d_coset_chunk_size = self._int(
             "ANALYSIS_8D_COSET_CHUNK_SIZE", 5000

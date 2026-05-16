@@ -213,7 +213,7 @@ def select_joined_e16_coset_9d(
 
 
 def select_moduli_9d(
-    conditions: Optional[Dict[str, Any]] = None, filtered_use_analysis_9d: bool = False
+    conditions: Optional[Dict[str, Any]] = None, use_analysis_9d: bool = False
 ) -> List[Moduli9d]:
     cur = conn.cursor()
     sql = """
@@ -232,18 +232,17 @@ def select_moduli_9d(
     """
 
     params = []
-    if filtered_use_analysis_9d is True:
+    if use_analysis_9d is True:
         sql += " WHERE use_analysis_9d = 1"
-    elif filtered_use_analysis_9d is False:
+    elif use_analysis_9d is False:
         sql += " WHERE use_analysis_9d = 0"
     if conditions:
         where_clauses = []
         for col, value in conditions.items():
             where_clauses.append(f"{col} = ?")
             params.append(value)
-        where_sql = " WHERE " + " AND ".join(where_clauses)
+        where_sql = " AND " + " AND ".join(where_clauses)
         sql += where_sql
-
     cur.execute(sql, params)
     rows = cur.fetchall()
 

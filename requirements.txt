@@ -1,17 +1,13 @@
-# Install: python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt
-# (Python 3.10+ recommended; 3.8 default "python3" is too old for black 25.x / scipy 1.15.x)
+# Install: pip install -r requirements.txt
+# Python 3.10+ recommended (reference setup: 3.13)
 
-black==25.9.0
-python-dotenv==1.0.1
-click==8.3.0
-dacite==1.9.2
-mpmath==1.3.0
-mypy_extensions==1.1.0
-numpy>=1.23.5,<3
-packaging==25.0
-pathspec==0.12.1
-platformdirs==4.5.0
-PyYAML==6.0.2
-pytokens==0.2.0
-scipy==1.15.2
+# Computation
 sympy==1.14.0
+numpy>=1.23.5,<3
+
+# Configuration
+python-dotenv==1.0.1
+PyYAML==6.0.2
+
+# Formatter
+black==25.9.0

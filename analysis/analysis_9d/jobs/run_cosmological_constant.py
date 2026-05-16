@@ -29,7 +29,7 @@ target_moduli_9d_ids = ENV.analysis_9d_target_moduli_9d_ids
 
 def main():
     moduli_9d_list = select_moduli_9d(
-        filtered_use_analysis_9d=True,
+        use_analysis_9d=True,
     )
     for moduli_9d in moduli_9d_list:
         if debug and moduli_9d.id not in target_moduli_9d_ids:
