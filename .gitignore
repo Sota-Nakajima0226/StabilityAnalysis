@@ -216,3 +216,6 @@ sql_sample/*
 # db
 db/*
 *.db
+
+analysis/tests
+documents/cursor

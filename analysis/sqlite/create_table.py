@@ -9,6 +9,12 @@ cur = conn.cursor()
 
 
 # Define SQL to create tables
+sql_create_e16 = """
+CREATE TABLE IF NOT EXISTS e16 (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    element TEXT NOT NULL
+);
+"""
 sql_create_moduli_9d = """
 CREATE TABLE IF NOT EXISTS moduli_9d (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -16,11 +22,23 @@ CREATE TABLE IF NOT EXISTS moduli_9d (
     a9 TEXT NOT NULL,
     g9 TEXT NOT NULL,
     gauge_group TEXT,
-    maximal_enhanced INTEGER,
+    use_analysis_9d INTEGER,
     cosmological_constant INTEGER,
     is_critical_point INTEGER,
     hessian TEXT,
     type TEXT
+);
+"""
+sql_create_e16_coset_9d = """
+CREATE TABLE IF NOT EXISTS e16_coset_9d (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    moduli_9d_id INTEGER NOT NULL,
+    e16_id INTEGER NOT NULL,
+    character INTEGER NOT NULL,
+    FOREIGN KEY (moduli_9d_id)
+        REFERENCES moduli_9d(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
 );
 """
 sql_create_moduli_8d = """
@@ -74,7 +92,9 @@ ON coset_8d (moduli_8d_id, character);
 """
 
 # Create Tables
+cur.execute(sql_create_e16)
 cur.execute(sql_create_moduli_9d)
+cur.execute(sql_create_e16_coset_9d)
 cur.execute(sql_create_moduli_8d)
 cur.execute(sql_create_massless_solution_9d)
 cur.execute(sql_create_coset_8d)

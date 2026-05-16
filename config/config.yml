@@ -28,3 +28,9 @@ analysis_8d:
 analysis_9d:
   massless_solution:
     log_file_path: massless_solution_9d.log
+  cosmological_const:
+    log_file_path: cosmological_const_9d.log
+  critical_point:
+    log_file_path: critical_point_9d.log
+  hessian:
+    log_file_path: hessian_9d.log

@@ -64,9 +64,7 @@ def _compute_massless_one(payload: dict[str, Any]) -> dict[str, Any]:
             moduli_9d_id=moduli_9d_id, a_1=a9_1, a_2=a9_2, g=g9
         )
         gauge_group = SemiSimpleLieAlg(**cast(dict, payload["gauge_group"]))
-        is_valid = len(massless_solutions) == DH_E16.count_nonzero_roots(
-            gauge_group
-        )
+        is_valid = len(massless_solutions) == DH_E16.count_nonzero_roots(gauge_group)
         # Serialize for IPC: only plain data (element is already JSON str in entities).
         rows = [
             {"moduli_9d_id": m.moduli_9d_id, "element": m.element}
