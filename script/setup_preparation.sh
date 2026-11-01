@@ -2,11 +2,11 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PYTHON_BIN="$ROOT_DIR/.venv/bin/python"
+PYTHON_BIN="${PYTHON_BIN:-python}"
 
-if [ ! -x "$PYTHON_BIN" ]; then
-  echo "Error: $PYTHON_BIN is not found or not executable."
-  echo "Please create venv and install dependencies first."
+if ! command -v "$PYTHON_BIN" >/dev/null 2>&1; then
+  echo "Error: $PYTHON_BIN is not found."
+  echo "Please activate the conda environment and install dependencies first."
   exit 1
 fi
 
