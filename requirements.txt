@@ -11,3 +11,6 @@ PyYAML==6.0.2
 
 # Formatter
 black==25.9.0
+
+# Tests
+pytest>=8.0.0,<9
