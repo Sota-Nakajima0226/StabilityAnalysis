@@ -217,5 +217,4 @@ sql_sample/*
 db/*
 *.db
 
-analysis/tests
 documents/cursor

@@ -6,10 +6,10 @@ from pathlib import Path
 from typing import Any, cast, Tuple
 from sympy import Matrix, Rational
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from common.matrix_handler import SMH
-from analysis_8d.utils import get_a8_and_b_from_delta
+from analysis_8d.legacy.utils import get_a8_and_b_from_delta
 from sqlite.db_connection import conn
 from sqlite.entities import JoinedModuli8d
 
