@@ -8,7 +8,7 @@ import os
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Optional
+from typing import Iterator, Optional
 
 import pytest
 
@@ -65,7 +65,11 @@ def cosmo_csv(repo_root: Path) -> Path:
     override = os.getenv("REFERENCE_COSMO_CSV", "").strip()
     if override:
         return Path(override)
-    return DEFAULT_COSMO_CSV if DEFAULT_COSMO_CSV.is_file() else repo_root / "output" / "moduli_8d_cosmological_const.csv"
+    return (
+        DEFAULT_COSMO_CSV
+        if DEFAULT_COSMO_CSV.is_file()
+        else repo_root / "output" / "moduli_8d_cosmological_const.csv"
+    )
 
 
 @pytest.fixture(scope="session")
@@ -92,7 +96,7 @@ def eigenvalue_round_digits() -> int:
 
 
 @pytest.fixture(scope="session")
-def db_conn(database_path: Path) -> sqlite3.Connection:
+def db_conn(database_path: Path) -> Iterator[sqlite3.Connection]:
     if not database_path.is_file():
         pytest.skip(f"Database not found: {database_path}")
     conn = sqlite3.connect(str(database_path))

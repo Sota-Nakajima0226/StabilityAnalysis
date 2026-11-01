@@ -67,7 +67,7 @@ def run_prototype(sols, cands, a9):
     t2 = time.perf_counter()
     chars = classify_characters(deltas, d_den, elements, e_den)
     cc = cosmological_constants(chars)
-    crit = ~first_derivatives(chars, elements).any(axis=1)
+    crit = np.all(first_derivatives(chars, elements) == 0, axis=1)
     t3 = time.perf_counter()
     hess = {}
     for k in np.flatnonzero(crit):

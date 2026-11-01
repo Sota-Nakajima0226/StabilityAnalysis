@@ -12,5 +12,8 @@ PyYAML==6.0.2
 # Formatter
 black==25.9.0
 
+# Linter (type checker; settings in pyrightconfig.json)
+pyright==1.1.414
+
 # Tests
 pytest>=8.0.0,<9

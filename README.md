@@ -19,6 +19,8 @@ conda activate <your-env>
 
 Physical calculations in this project are performed with **[SymPy](https://www.sympy.org/)** (1.14.0): vectors and matrices, exact rationals, root generation, massless conditions, coset classification, derivatives, and Hessian eigenvalue analysis.
 
+The 8D stability analysis (`run_stability_analysis.py`) uses **[NumPy](https://numpy.org/)** instead: rational vectors are scaled to int64 arrays with a common denominator, so the characters, first derivatives and Hessians are computed exactly with integer matrix products. Floating point is used only for the Hessian eigenvalues.
+
 ### Other dependencies
 
 | Library | Version | Role |
@@ -92,7 +94,7 @@ Create tables:
 python analysis/sqlite/create_table.py
 ```
 
-`create_table.py` also creates an index on `coset_8d (moduli_8d_id, character)` to speed up the cosmological-constant aggregation.
+`create_table.py` also creates indexes on `moduli_8d (moduli_9d_id)` and `massless_solution_9d (moduli_9d_id)` for the 8D stability analysis, and on `coset_8d (moduli_8d_id, character)` for the legacy cosmological-constant aggregation. All statements use `IF NOT EXISTS`, so the script can be re-run on an existing database to add missing indexes.
 
 Insert master data:
 
@@ -143,25 +145,37 @@ python analysis/sqlite/insert_master_data.py
    python analysis/analysis_8d/jobs/run_moduli.py
    ```
 
-2. **Coset (8D)** — classify the massless solutions by the inner products with the moduli and insert into `coset_8d`:
+2. **Stability analysis (8D)** — for each modulus, compute the cosmological constant, whether it is a critical point, and the Hessian eigenvalues and type at critical points; results go into `cosmological_constant`, `is_critical_point`, `hessian` and `type` on `moduli_8d` (`hessian` and `type` are NULL for non-critical moduli). The calculation uses exact integer arithmetic with NumPy and does not write to `coset_8d`:
+
+   ```bash
+   python analysis/analysis_8d/jobs/run_stability_analysis.py
+   ```
+
+   Settings: `ANALYSIS_8D_STABILITY_CHUNK_SIZE` (moduli per worker task, default 20000) and `STABILITY_8D_WORKERS` (worker processes). With `ANALYSIS_8D_DEBUG=true`, only `ANALYSIS_8D_TARGET_MODULI_9D_IDS` are processed.
+
+**Legacy SymPy jobs**
+
+The previous SymPy implementation is kept under `analysis/analysis_8d/legacy/` for reference. It stores the characters of all massless solutions in `coset_8d`, so it is only practical for small data. The jobs replace step 2 above and run in this order:
+
+1. **Coset (8D)** — classify the massless solutions by the inner products with the moduli and insert into `coset_8d`:
 
    ```bash
    python analysis/analysis_8d/legacy/jobs/run_coset.py
    ```
 
-3. **Cosmological constant** — compute for each modulus; results go into the `cosmological_constant` column of `moduli_8d`:
+2. **Cosmological constant** — compute for each modulus; results go into the `cosmological_constant` column of `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/legacy/jobs/run_cosmological_constant.py
    ```
 
-4. **Critical points** — first derivative of the potential; results go into `is_critical_point` on `moduli_8d`:
+3. **Critical points** — first derivative of the potential; results go into `is_critical_point` on `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/legacy/jobs/run_critical_point.py
    ```
 
-5. **Hessian** — second derivative at each critical point; results go into `hessian` and `type` on `moduli_8d`:
+4. **Hessian** — second derivative at each critical point; results go into `hessian` and `type` on `moduli_8d`:
 
    ```bash
    python analysis/analysis_8d/legacy/jobs/run_hessian.py

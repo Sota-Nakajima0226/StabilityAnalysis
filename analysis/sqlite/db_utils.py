@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Tuple
 import sys
 import json
 
@@ -398,6 +398,28 @@ def select_joined_moduli_8d(
         )
         results.append(entity)
     return results
+
+
+def select_moduli_8d_delta_chunk(
+    moduli_9d_id: int, after_id: int, limit: int
+) -> List[Tuple[int, str]]:
+    """
+    Read (id, delta) of moduli_8d rows of one background in id order, starting
+    after `after_id` (keyset pagination).
+
+    delta is returned as the raw JSON text so that it can be parsed in workers.
+    """
+    sql = """
+    SELECT
+        id,
+        delta
+    FROM moduli_8d
+    WHERE moduli_9d_id = ? AND id > ?
+    ORDER BY id
+    LIMIT ?
+    """
+    cur = conn.execute(sql, (moduli_9d_id, after_id, limit))
+    return [(row[0], row[1]) for row in cur.fetchall()]
 
 
 def get_moduli_8d_ids(conditions: Optional[Dict[str, Any]] = None) -> List[int]:

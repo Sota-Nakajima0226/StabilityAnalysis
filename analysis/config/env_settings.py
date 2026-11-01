@@ -69,6 +69,9 @@ class EnvSettings:
         self.analysis_8d_hessian_eigenvalue_round_digits = self._int(
             "ANALYSIS_8D_HESSIAN_EIGENVALUE_ROUND_DIGITS", 8
         )
+        self.analysis_8d_stability_chunk_size = self._int(
+            "ANALYSIS_8D_STABILITY_CHUNK_SIZE", 20000
+        )
 
     @property
     def database_path(self) -> str:
