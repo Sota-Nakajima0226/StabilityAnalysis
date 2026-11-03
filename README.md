@@ -139,11 +139,13 @@ python analysis/sqlite/insert_master_data.py
 
 **Steps**
 
-1. **Moduli (8D)** — enumerate moduli candidates and insert into `moduli_8d`:
+1. **Moduli (8D)** — enumerate moduli candidates and insert into `moduli_8d` in Cartesian-product chunks (A-series coefficients are enumerated exhaustively):
 
    ```bash
    python analysis/analysis_8d/jobs/run_moduli.py
    ```
+
+   Settings: `ANALYSIS_8D_MODULI_CHUNK_SIZE` (product indices per worker task, default 100000) and `MODULI_8D_WORKERS`. With `ANALYSIS_8D_DEBUG=true`, only `ANALYSIS_8D_TARGET_MODULI_9D_IDS` are processed.
 
 2. **Stability analysis (8D)** — for each modulus, compute the cosmological constant, whether it is a critical point, and the Hessian eigenvalues and type at critical points; results go into `cosmological_constant`, `is_critical_point`, `hessian` and `type` on `moduli_8d` (`hessian` and `type` are NULL for non-critical moduli). The calculation uses exact integer arithmetic with NumPy and does not write to `coset_8d`:
 

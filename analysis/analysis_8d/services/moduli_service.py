@@ -11,6 +11,15 @@ from model.lie_algebra import DynkinType, DynkinInfo, SemiSimpleLieAlg
 from model.moduli import Coefficient, Moduli8DComponent
 from common.matrix_handler import SMH
 
+# Exhaustive A-series patterns: (order N, coefficient values on removed nodes).
+_A_COEFFICIENT_PATTERNS: Tuple[Tuple[int, ...], ...] = (
+    (1,),
+    (1, 1),
+    (3, 1),
+    (2, 1, 1),
+    (1, 1, 1, 1),
+)
+
 
 def find_coeffs_of_fund_weights_DE(
     extended_dynkin_info: DynkinInfo, kac_labels: Dict[str, int]
@@ -166,135 +175,56 @@ def find_coeffs_of_fund_weights_DE(
 
 
 def find_coefficients_A(edd_info: DynkinInfo) -> List[Coefficient]:
+    """
+    Exhaustive A-series coefficients: all Kac-label-1 node combinations with
+    orders 1, 2, 4 and patterns (1), (1,1), (3,1), (2,1,1), (1,1,1,1).
+    """
     result: List[Coefficient] = []
-    diagram = edd_info.diagram
-    base_coefficients = dict()
-    for node in diagram:
-        base_coefficients[node] = 0
-    lie_algebras_8d = []
-    # All Kac labels of A type are 1.
-    # N=1
-    # Remove one node
-    diagram_8d = DH_E16.remove_nodes(diagram, ["-1"])
-    lie_algebra_8d = DH_E16.get_semi_simple_lie_algebra_from_diagram(diagram_8d)
-    lie_algebras_8d.append(lie_algebra_8d)
-    coefficients = {**base_coefficients, "-1": 1}
-    result.append(Coefficient(order=1, s=coefficients, lie_algebra_8d=lie_algebra_8d))
-    # Remove two nodes
-    if edd_info.rank > 1:
-        # N=2
-        set_coefficients_two_nodes_A(
+    base_coefficients = {node: 0 for node in edd_info.diagram}
+    for pattern in _A_COEFFICIENT_PATTERNS:
+        set_coefficients_removed_nodes_A(
             extended_dynkin_info=edd_info,
             coefficient_list=result,
             base_coefficients=base_coefficients,
-        )
-        # N=4
-        set_coefficients_two_nodes_A(
-            extended_dynkin_info=edd_info,
-            coefficient_list=result,
-            base_coefficients=base_coefficients,
-            value1=3,
-        )
-    # Remove three nodes
-    if edd_info.rank > 2:
-        # N=4
-        set_coefficients_multiple_nodes_A(
-            extended_dynkin_info=edd_info,
-            coefficient_list=result,
-            base_coefficients=base_coefficients,
-            num_removed_nodes=3,
-            reference_node_value=2,
-        )
-    # Remove four nodes
-    if edd_info.rank > 3:
-        # N=4
-        set_coefficients_multiple_nodes_A(
-            extended_dynkin_info=edd_info,
-            coefficient_list=result,
-            base_coefficients=base_coefficients,
-            num_removed_nodes=4,
+            coefficients_value=list(pattern),
         )
     return result
 
 
-def set_coefficients_two_nodes_A(
+def set_coefficients_removed_nodes_A(
     extended_dynkin_info: DynkinInfo,
     coefficient_list: List[Coefficient],
     base_coefficients: Dict[str, int],
-    reference_node: str = "-1",
-    value1: int = 1,
-    value2: int = 1,
-):
-    order = value1 + value2
-    previous_removed_node = reference_node
-    diagram = extended_dynkin_info.diagram
-    removed_node = diagram[previous_removed_node][0]
-    for i in range(1, extended_dynkin_info.rank // 2 + 1):
-        removed_nodes = [reference_node, removed_node]
-        diagram_after_removing_nodes = DH_E16.remove_nodes(diagram, removed_nodes)
-        coefficients = {
-            **base_coefficients,
-            reference_node: value1,
-            removed_node: value2,
-        }
-        coefficient_list.append(
-            Coefficient(
-                order=order,
-                s=coefficients,
-                lie_algebra_8d=DH_E16.get_semi_simple_lie_algebra_from_diagram(
-                    diagram_after_removing_nodes
-                ),
-            )
-        )
-        next_removed_node = next(
-            (l for l in diagram[removed_node] if l != previous_removed_node), None
-        )
-        if not next_removed_node:
-            break
-        previous_removed_node = removed_node
-        removed_node = next_removed_node
+    coefficients_value: List[int],
+) -> None:
+    """
+    Append coefficients for every choice of removed nodes with the given values.
 
-
-def set_coefficients_multiple_nodes_A(
-    extended_dynkin_info: DynkinInfo,
-    coefficient_list: List[Coefficient],
-    base_coefficients: Dict[str, int],
-    num_removed_nodes: int,
-    reference_node: str = "-1",
-    reference_node_value: int = 1,
-    other_nodes_value: int = 1,
-):
-    order = reference_node_value + other_nodes_value * (num_removed_nodes - 1)
+    All distinct assignments of ``coefficients_value`` to the removed nodes are
+    produced with ``set(itertools.permutations(...))``.
+    """
+    order = sum(coefficients_value)
+    removed_nodes_num = len(coefficients_value)
     extended_diagram = extended_dynkin_info.diagram
-    diagram_a = DH_E16.remove_nodes(extended_diagram, [reference_node])
-    lie_algebras_8d = []
+    assignments = set(itertools.permutations(coefficients_value))
     for removed_nodes in itertools.combinations(
-        diagram_a.keys(), num_removed_nodes - 1
+        extended_diagram.keys(), removed_nodes_num
     ):
-        diagram_8d = DH_E16.remove_nodes(diagram_a, list(removed_nodes))
-        semi_simple_lie_algebra = DH_E16.get_semi_simple_lie_algebra_from_diagram(
-            diagram_8d
-        )
-        if semi_simple_lie_algebra not in lie_algebras_8d:
-            lie_algebras_8d.append(semi_simple_lie_algebra)
-            coefficients = {**base_coefficients, reference_node: reference_node_value}
-            for rn in removed_nodes:
-                coefficients[rn] = other_nodes_value
+        diagram_8d = DH_E16.remove_nodes(extended_diagram, list(removed_nodes))
+        lie_algebra_8d = DH_E16.get_semi_simple_lie_algebra_from_diagram(diagram_8d)
+        for values in assignments:
+            coefficients = {**base_coefficients}
+            for node, value in zip(removed_nodes, values):
+                coefficients[node] = value
             coefficient_list.append(
-                Coefficient(
-                    order=order, s=coefficients, lie_algebra_8d=semi_simple_lie_algebra
-                )
+                Coefficient(order=order, s=coefficients, lie_algebra_8d=lie_algebra_8d)
             )
 
 
 def get_coefficients_8d(removed_nodes: List[str]) -> List[List[Coefficient]]:
-    """_summary_
-
-    Args:
-        removed_nodes (List[str]): _description_
-
-    Returns:
-        List[List[Coefficient]]: _description_
+    """
+    For each connected component of the 9D Dynkin diagram, list the coefficient
+    choices that build 8D Wilson lines.
     """
     result = []
     # Get the Dynkin diagram in 9D by removing the two node from the EDD
@@ -374,3 +304,14 @@ def get_moduli_8d_info_from_components(
         if moduli.lie_algebra_8d.E:
             lie_alg.E.extend(moduli.lie_algebra_8d.E)
     return delta, lie_alg, removed_nodes_8d
+
+
+def count_moduli_8d_candidates(removed_nodes: List[str]) -> int:
+    """Number of moduli_8d rows for one moduli_9d background (product of choices)."""
+    sizes = [len(c) for c in get_coefficients_8d(removed_nodes)]
+    if not sizes:
+        return 0
+    total = 1
+    for size in sizes:
+        total *= size
+    return total
