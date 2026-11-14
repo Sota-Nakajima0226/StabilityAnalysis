@@ -191,25 +191,24 @@ def build_db_m8_index(
     conn: sqlite3.Connection,
     db_m9_map: dict[str, int],
     active_parents: Optional[set[str]] = None,
+    keep_keys: Optional[set[tuple[str, str, str]]] = None,
 ) -> dict[tuple[str, str, str], DbModuli8dRow]:
     """
     Index moduli_8d by natural key.
 
-    If active_parents is set, only rows whose parent removed_nodes canon is in the set.
+    If active_parents is set, only rows whose parent removed_nodes canon is in the set
+    (filtered in SQL). If keep_keys is set, only those natural keys are stored — needed
+    when moduli_8d is much larger than the Mathematica reference (exhaustive enumeration).
     """
     parent_to_db_m9_id = {p: i for p, i in db_m9_map.items()}
     if active_parents is not None:
-        allowed_m9_ids = {
-            parent_to_db_m9_id[p]
-            for p in active_parents
-            if p in parent_to_db_m9_id
-        }
+        allowed_m9_ids = sorted(
+            {parent_to_db_m9_id[p] for p in active_parents if p in parent_to_db_m9_id}
+        )
     else:
         allowed_m9_ids = None
 
-    cur = conn.cursor()
-    cur.execute(
-        """
+    sql = """
         SELECT
             m8.id,
             m8.moduli_9d_id,
@@ -224,19 +223,27 @@ def build_db_m8_index(
         FROM moduli_8d AS m8
         JOIN moduli_9d AS m9 ON m8.moduli_9d_id = m9.id
         """
-    )
+    params: list[Any] = []
+    if allowed_m9_ids is not None:
+        if not allowed_m9_ids:
+            return {}
+        placeholders = ",".join("?" for _ in allowed_m9_ids)
+        sql += f" WHERE m8.moduli_9d_id IN ({placeholders})"
+        params.extend(allowed_m9_ids)
+
+    cur = conn.cursor()
+    cur.execute(sql, params)
     index: dict[tuple[str, str, str], DbModuli8dRow] = {}
-    for row in cur.fetchall():
-        db_m9_id = int(row[1])
-        if allowed_m9_ids is not None and db_m9_id not in allowed_m9_ids:
-            continue
+    for row in cur:
         parent = canon_json(row[2])
         rn8 = canon_json(row[3])
         delta = canon_json(row[4])
         key = (parent, rn8, delta)
+        if keep_keys is not None and key not in keep_keys:
+            continue
         index[key] = DbModuli8dRow(
             id=int(row[0]),
-            moduli_9d_id=db_m9_id,
+            moduli_9d_id=int(row[1]),
             parent_removed_nodes=parent,
             removed_nodes=rn8,
             delta=delta,
@@ -304,9 +311,7 @@ def iter_critical_point_csv_rows(
                 "removed_nodes_8d": row["removed_nodes"],
                 "delta": row["delta"],
                 "is_critical_point": row["is_critical_point"],
-                "key": moduli_8d_key(
-                    parent, row["removed_nodes"], row["delta"]
-                ),
+                "key": moduli_8d_key(parent, row["removed_nodes"], row["delta"]),
             }
 
 
@@ -330,9 +335,7 @@ def iter_hessian_csv_rows(
                 "delta": row["delta"],
                 "hessian": row["hessian"],
                 "type": row["type"],
-                "key": moduli_8d_key(
-                    parent, row["removed_nodes"], row["delta"]
-                ),
+                "key": moduli_8d_key(parent, row["removed_nodes"], row["delta"]),
             }
 
 
@@ -405,9 +408,7 @@ def compare_critical_points(
     max_mismatch_samples: int = 10,
 ) -> MatchStats:
     stats = MatchStats()
-    for csv_row in iter_critical_point_csv_rows(
-        cp_csv, mma_m9_map, active_mma_m9_ids
-    ):
+    for csv_row in iter_critical_point_csv_rows(cp_csv, mma_m9_map, active_mma_m9_ids):
         key = csv_row["key"]
         db_row = db_index.get(key)
         if db_row is None:
@@ -445,9 +446,7 @@ def compare_hessians(
             return False
         return all(x == y for x, y in zip(a, b))
 
-    for csv_row in iter_hessian_csv_rows(
-        hessian_csv, mma_m9_map, active_mma_m9_ids
-    ):
+    for csv_row in iter_hessian_csv_rows(hessian_csv, mma_m9_map, active_mma_m9_ids):
         key = csv_row["key"]
         db_row = db_index.get(key)
         if db_row is None:
@@ -457,9 +456,7 @@ def compare_hessians(
         csv_eigs = parse_hessian_eigenvalues(
             csv_row["hessian"], eigenvalue_round_digits
         )
-        db_eigs = parse_hessian_eigenvalues(
-            db_row.hessian, eigenvalue_round_digits
-        )
+        db_eigs = parse_hessian_eigenvalues(db_row.hessian, eigenvalue_round_digits)
         compare_field(
             stats,
             key,

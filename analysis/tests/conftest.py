@@ -28,6 +28,7 @@ from compare_moduli_8d import (  # noqa: E402
     build_db_m8_index,
     build_m9_map,
     build_mma_m9_map,
+    iter_cosmo_csv_rows,
     resolve_active_mma_m9_ids,
 )
 
@@ -138,7 +139,18 @@ def comparison_context(
             "No Mathematica moduli_9d_id shares a parent removed_nodes with DB moduli_9d"
         )
     active_parents = {mma_m9_map[mid] for mid in active_mma_m9_ids}
-    db_index = build_db_m8_index(db_conn, db_m9_map, active_parents=active_parents)
+    # Only index DB rows that appear in the Mathematica CSV. Exhaustive moduli_8d
+    # tables are too large to load entirely into memory.
+    keep_keys = {
+        row["key"]
+        for row in iter_cosmo_csv_rows(cosmo_csv, mma_m9_map, active_mma_m9_ids)
+    }
+    db_index = build_db_m8_index(
+        db_conn,
+        db_m9_map,
+        active_parents=active_parents,
+        keep_keys=keep_keys,
+    )
     return {
         "db_conn": db_conn,
         "cosmo_csv": cosmo_csv,
