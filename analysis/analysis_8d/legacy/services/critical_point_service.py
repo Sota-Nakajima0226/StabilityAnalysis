@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from sympy import Matrix
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from common.matrix_handler import SMH
 from sqlite.db_connection import conn

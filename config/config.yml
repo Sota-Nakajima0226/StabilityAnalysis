@@ -24,6 +24,8 @@ analysis_8d:
     log_file_path: critical_point_8d.log
   hessian:
     log_file_path: hessian_8d.log
+  stability_analysis:
+    log_file_path: stability_analysis_8d.log
 
 analysis_9d:
   massless_solution:

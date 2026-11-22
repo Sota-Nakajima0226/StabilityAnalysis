@@ -90,6 +90,14 @@ sql_create_index_coset_8d_moduli_character = """
 CREATE INDEX IF NOT EXISTS idx_coset_8d_moduli_8d_id_character
 ON coset_8d (moduli_8d_id, character);
 """
+sql_create_index_moduli_8d_moduli_9d = """
+CREATE INDEX IF NOT EXISTS idx_moduli_8d_moduli_9d_id
+ON moduli_8d (moduli_9d_id);
+"""
+sql_create_index_massless_solution_9d_moduli_9d = """
+CREATE INDEX IF NOT EXISTS idx_massless_solution_9d_moduli_9d_id
+ON massless_solution_9d (moduli_9d_id);
+"""
 
 # Create Tables
 cur.execute(sql_create_e16)
@@ -99,4 +107,6 @@ cur.execute(sql_create_moduli_8d)
 cur.execute(sql_create_massless_solution_9d)
 cur.execute(sql_create_coset_8d)
 cur.execute(sql_create_index_coset_8d_moduli_character)
+cur.execute(sql_create_index_moduli_8d_moduli_9d)
+cur.execute(sql_create_index_massless_solution_9d_moduli_9d)
 conn.commit()

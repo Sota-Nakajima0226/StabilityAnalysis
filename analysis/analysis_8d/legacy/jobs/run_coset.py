@@ -15,11 +15,11 @@ from pathlib import Path
 from typing import Any
 
 # analysis/ package root — required for child processes (spawn) to import analysis_8d.*
-_ANALYSIS_ROOT = Path(__file__).resolve().parent.parent.parent
+_ANALYSIS_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 if str(_ANALYSIS_ROOT) not in sys.path:
     sys.path.insert(0, str(_ANALYSIS_ROOT))
 
-from analysis_8d.services.coset_service import classify_lattice_elements
+from analysis_8d.legacy.services.coset_service import classify_lattice_elements
 from common.matrix_handler import SMH
 from sqlite.db_utils import (
     select_moduli_9d,

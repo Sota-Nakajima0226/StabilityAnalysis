@@ -2,9 +2,11 @@ import sys
 from pathlib import Path
 from dataclasses import asdict
 
-sys.path.append(str(Path(__file__).resolve().parents[2]))
+sys.path.append(str(Path(__file__).resolve().parents[3]))
 
-from analysis_8d.services.cosmological_constant_service import get_cosmological_constant
+from analysis_8d.legacy.services.cosmological_constant_service import (
+    get_cosmological_constant,
+)
 from sqlite.db_utils import (
     select_moduli_8d,
     bulk_update_by_id,

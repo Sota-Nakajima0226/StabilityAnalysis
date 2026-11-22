@@ -188,13 +188,13 @@ class SpMatrixHandler:
 
     @staticmethod
     def classify_critical_point_numerical(
-        hessian: Matrix, epsilon: float = 1e-10
+        hessian: Union[Matrix, np.ndarray], epsilon: float = 1e-10
     ) -> Tuple[np.ndarray, CriticalPointType]:
         """
         Determine the type of the critical point by calculating eigenvalues of the hessian.
 
         Args:
-            hessian (Matrix): Hessian at the critical point.
+            hessian (Matrix | np.ndarray): Hessian at the critical point.
             epsilon (int, default 1e-10): threshold to be considered as 0.
         Returns:
             Dict[float, int]:

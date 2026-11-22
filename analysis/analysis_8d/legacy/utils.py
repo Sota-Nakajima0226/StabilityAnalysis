@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, List, Dict, Tuple, cast
 from sympy import Rational, Matrix
 
-sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent.parent))
 
 from common.matrix_handler import SMH
 from model.moduli import Moduli8DComponent, WilsonLine8DData

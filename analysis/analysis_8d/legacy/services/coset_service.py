@@ -4,7 +4,7 @@ from typing import List, Tuple
 from sympy.core.numbers import Rational
 from sympy.matrices import Matrix
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
+sys.path.append(str(Path(__file__).resolve().parent.parent.parent))
 
 from common.matrix_handler import SMH
 from sqlite.entities import Coset8d, MasslessSolution9d
